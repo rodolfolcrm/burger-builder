@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {Redirect} from 'react-router-dom';
 
 import Button from '../../components/UI/Button/Button';
 import Input from '../../components/UI/Input/Input';
@@ -112,26 +113,32 @@ class Auth extends Component {
 
         ));
 
-        if(this.props.loading){
+        if (this.props.loading) {
             formElements = <Spinner/>;
         }
 
         let errorMessage = null;
-        if(this.props.error){
+        if (this.props.error) {
             errorMessage = (
-              <p>{this.props.error.message}</p>
+                <p>{this.props.error.message}</p>
             );
+        }
+
+        let authRedirect = null;
+        if (this.props.isAuthenticated) {
+            authRedirect = this.props.building ? <Redirect to="/checkout"/> : <Redirect to="/"/>;
         }
 
         return (
             <div className={classes.Auth}>
+                {authRedirect}
                 {errorMessage}
                 <form onSubmit={this.submitHandler}>
                     {formElements}
                     <Button btnType="Success">{this.state.isSignup ? 'SIGNUP' : 'SIGNIN'}</Button>
                 </form>
                 <Button btnType="Danger"
-                    clicked={this.switchAuthModeHandler}>
+                        clicked={this.switchAuthModeHandler}>
                     SWITCH TO {this.state.isSignup ? 'SIGNIN' : 'SIGNUP'}
                 </Button>
             </div>
@@ -142,7 +149,9 @@ class Auth extends Component {
 const mapStateToProps = state => {
     return {
         loading: state.auth.loading,
-        error: state.auth.error
+        error: state.auth.error,
+        isAuthenticated: state.auth.token !== null,
+        building: state.burgerBuilder.building
     };
 };
 
