@@ -10,6 +10,7 @@ import * as orderActions from "../../../store/actions/index";
 
 import axios from "../../../axios-orders";
 import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import {checkValidity, updateObject} from "../../../shared/utility";
 
 class ContactData extends Component {
     state = {
@@ -117,37 +118,21 @@ class ContactData extends Component {
         this.props.onOrderBurger(order, this.props.token);
     }
 
-    checkValidity(value, rules) {
-        let isValid = false;
-
-        if (rules.required) {
-            isValid = value.trim() !== '';
-        }
-
-        if (isValid && rules.minLength) {
-            isValid = value.length >= rules.minLength;
-        }
-
-        if (isValid && rules.maxLength) {
-            isValid = value.length <= rules.maxLength;
-        }
-
-        return isValid;
-    }
-
     inputChangeHandler = (event, inputIdentifier) => {
-        const updatedOrderForm = {...this.state.orderForm};
-        const updatedFormElement = {...updatedOrderForm[inputIdentifier]};
-        updatedFormElement.value = event.target.value;
-        updatedFormElement.valid = this.checkValidity(updatedFormElement.value, updatedFormElement.validation);
-        updatedFormElement.touched = true;
-        updatedOrderForm[inputIdentifier] = updatedFormElement;
+        const updatedFormElement = updateObject(this.state.orderForm[inputIdentifier], {
+            value: event.target.value,
+            valid: checkValidity(event.target.value, this.state.orderForm[inputIdentifier].validation),
+            touched: true
+        });
+
+        const updatedOrderForm = updateObject(this.state.orderForm, {
+            [inputIdentifier]: updatedFormElement
+        });
 
         let formIsValid = true;
         for (let inputId in updatedOrderForm) {
             formIsValid = updatedOrderForm[inputId].valid && formIsValid;
         }
-        console.log(formIsValid);
 
         this.setState({orderForm: updatedOrderForm, formIsValid: formIsValid});
     }
@@ -206,7 +191,7 @@ const mapStateToProps = state => {
     }
 };
 
-const mapDispatchToProps = dispatch =>{
+const mapDispatchToProps = dispatch => {
     return {
         onOrderBurger: (orderData, token) => dispatch(orderActions.purchaseBurger(orderData, token))
     }
